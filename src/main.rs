@@ -8,6 +8,7 @@ extern crate serde;
 use serde::{Serialize,Deserialize};
 extern crate chrono;
 use chrono::prelude::*;
+use chrono::Duration;   
 #[macro_use] extern crate tracing;
 
 use std::{
@@ -127,7 +128,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (h,m,s,ms) = {
         let h = diff.num_hours();
         diff -= Duration::hours(h);
-        let m = diff::num_minutes();
+        let m = diff.num_minutes();
         diff -= Duration::minutes(m);
         let s = diff.num_seconds();
         diff -= Duration::seconds(s);
