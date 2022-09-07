@@ -9,7 +9,6 @@ use serde::{Serialize,Deserialize};
 extern crate chrono;
 use chrono::prelude::*;
 #[macro_use] extern crate tracing;
-use tracing_subscriber;
 
 use std::{
     path::PathBuf,
@@ -24,9 +23,8 @@ struct FileData {
     modified: Option<DateTime<Utc>>,
 }
 
-#[instrument(skip(sender))]
 fn get_file_data(file: PathBuf, sender: Sender<FileData>) -> Result<(), Box<dyn std::error::Error>> {
-    let metadata = file.metadata()?;
+    let metadata = file.metadata().map_err(|e| format!("{}:{}", e, file.display()))?;
     if metadata.is_symlink() {
         return Ok(());
     }
@@ -45,15 +43,14 @@ fn get_file_data(file: PathBuf, sender: Sender<FileData>) -> Result<(), Box<dyn 
         })?;
         return Ok(());
     }
-    else {
-        if metadata.is_dir() {
+    else if metadata.is_dir() {
             rayon::spawn(move || {
-                info!("Spawned new thread for child directory {}", &file.display());
-                let _ = handle_directory(file, sender.clone())
-                    .map_err(|e| error!("{}",e));
+                let span = debug_span!("handle_directory", "{}", &file.display());
+                let _enter = span.enter();
+                let _ = handle_directory(file, sender)
+                    .map_err(|e| warn!("{}",e));
             });
             return Ok(());
-        }
     }
     Ok(())
 }
@@ -69,7 +66,6 @@ struct Args {
 }
 
 
-#[instrument(skip(sender))]
 fn handle_directory(path: PathBuf, sender: Sender<FileData>) -> Result<(), Box<dyn std::error::Error>>
 {
     if path.is_symlink() {
@@ -78,8 +74,8 @@ fn handle_directory(path: PathBuf, sender: Sender<FileData>) -> Result<(), Box<d
     }
     let entries = path.read_dir()?;
     let direntries: Vec<(DirEntry,Sender<FileData>)> = entries.filter_map(|s| {
-            if s.is_ok() {
-                Some((s.unwrap(), sender.clone() ))
+            if let Ok(s) = s {
+                Some((s, sender.clone() ))
             }
             else {
                 None
@@ -90,8 +86,10 @@ fn handle_directory(path: PathBuf, sender: Sender<FileData>) -> Result<(), Box<d
         // Perform this operation in parallel according to available resources
         .into_par_iter()
         .for_each(|(entry, sender)| {
+            let span = debug_span!("entry", "{}", entry.path().display());
+            let _ = span.enter();
             let _ = get_file_data(entry.path(), sender)
-                .map_err(|e| error!("{}", e));
+                .map_err(|e| warn!("{}", e));
         });
     Ok(())
 }
@@ -106,7 +104,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Opened {} for writing.", &args.outfile.display());
     let start: DateTime<Utc> = Utc::now();
     // Spawn a new thread handling the root directory of the tree
-    rayon::spawn(move || { let _ = handle_directory(args.path, sender).map_err(|e| error!("{}",e)); });
+    rayon::spawn(move || {
+        let span = debug_span!("root thread");
+        let _enter = span.enter();
+        let _ = handle_directory(args.path.clone(), sender)
+            .map_err(|e| warn!("{}",e));
+    });
     debug!("Spawned root thread.");
     while let Ok(msg) = receiver.recv() {
         wtr.serialize(msg)?;
