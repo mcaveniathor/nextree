@@ -4,7 +4,7 @@
 [![Rust](https://github.com/mcaveniathor/nextree/actions/workflows/rust.yml/badge.svg)](https://github.com/mcaveniathor/nextree/actions/workflows/rust.yml)
 [![Crates.io](https://img.shields.io/crates/l/toboggan)](https://lbesson.mit-license.org)
 
-Nextree is a multithreaded (leveraging parallel iterators and threadpool from the [rayon](https://github.com/rayon-rs/rayon) crate) command-line utility similar in function to tree, with logging and CSV output
+Nextree is a multithreaded (leveraging parallel iterators and threadpool from the [rayon](https://github.com/rayon-rs/rayon) crate) and cross-platform command-line utility similar in function to tree, with logging and CSV output. Presently it logs file paths, create, and modify times as reported by the filesyste
 
 ## Installation
 `cargo install nextree`
