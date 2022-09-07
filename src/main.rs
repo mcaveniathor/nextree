@@ -124,7 +124,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     wtr.flush()?;
     let end: DateTime<Utc> = Utc::now();
     let diff: chrono::Duration = end - start;
-    info!("Reported on {} files totalling {} bytes in {} hours, {} minutes, {} seconds, and {} milliseconds.",  count, size, diff.num_hours(), diff.num_minutes(), diff.num_seconds(), diff.num_milliseconds());
+    let (h,m,s,ms) = {
+        let h = diff.num_hours();
+        diff -= Duration::hours(h);
+        let m = diff::num_minutes();
+        diff -= Duration::minutes(m);
+        let ms = diff.num_milliseconds();
+        (h,m,ms)
+    };
+        
+        
+    info!("Reported on {} files totalling {} bytes in {} hours, {} minutes, {} seconds, and {} milliseconds.",  count, size,
+        h, m, ms);
     debug!("Flushed write buffer.");
     Ok(())
 }
