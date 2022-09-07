@@ -127,11 +127,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let diff: chrono::Duration = end - start;
     let (h,m,s,ms) = {
         let h = diff.num_hours();
-        diff -= Duration::hours(h);
+        diff = diff - Duration::hours(h);
         let m = diff.num_minutes();
-        diff -= Duration::minutes(m);
+        diff = diff - Duration::minutes(m);
         let s = diff.num_seconds();
-        diff -= Duration::seconds(s);
+        diff = diff - Duration::seconds(s);
         let ms = diff.num_milliseconds();
         (h,m,s,ms)
     };
