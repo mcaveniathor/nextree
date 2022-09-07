@@ -129,13 +129,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         diff -= Duration::hours(h);
         let m = diff::num_minutes();
         diff -= Duration::minutes(m);
+        let s = diff.num_seconds();
+        diff -= Duration::seconds(s);
         let ms = diff.num_milliseconds();
-        (h,m,ms)
+        (h,m,s,ms)
     };
         
         
     info!("Reported on {} files totalling {} bytes in {} hours, {} minutes, {} seconds, and {} milliseconds.",  count, size,
-        h, m, ms);
+        h, m, s, ms);
     debug!("Flushed write buffer.");
     Ok(())
 }
