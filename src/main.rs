@@ -21,6 +21,8 @@ struct FileData {
     path: String,
     created: Option<DateTime<Utc>>,
     modified: Option<DateTime<Utc>>,
+    // size in bytes
+    size: u64,
 }
 
 fn get_file_data(file: PathBuf, sender: Sender<FileData>) -> Result<(), Box<dyn std::error::Error>> {
@@ -40,6 +42,7 @@ fn get_file_data(file: PathBuf, sender: Sender<FileData>) -> Result<(), Box<dyn 
             path,
             created,
             modified,
+            size: metadata.len(),
         })?;
         return Ok(());
     }
@@ -48,7 +51,7 @@ fn get_file_data(file: PathBuf, sender: Sender<FileData>) -> Result<(), Box<dyn 
                 let span = debug_span!("handle_directory", "{}", &file.display());
                 let _enter = span.enter();
                 let _ = handle_directory(file, sender)
-                    .map_err(|e| warn!("{}",e));
+                    .map_err(|e| debug!("{}",e));
             });
             return Ok(());
     }
@@ -89,7 +92,7 @@ fn handle_directory(path: PathBuf, sender: Sender<FileData>) -> Result<(), Box<d
             let span = debug_span!("entry", "{}", entry.path().display());
             let _ = span.enter();
             let _ = get_file_data(entry.path(), sender)
-                .map_err(|e| warn!("{}", e));
+                .map_err(|e| debug!("{}", e));
         });
     Ok(())
 }
@@ -101,23 +104,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // receiver to be used by thread collecting FileData structs for serialization
     let (sender, receiver): (Sender<FileData>, Receiver<FileData>) = channel();
     let mut wtr = Writer::from_path(&args.outfile)?;
-    info!("Opened {} for writing.", &args.outfile.display());
+    debug!("Opened {} for writing.", &args.outfile.display());
     let start: DateTime<Utc> = Utc::now();
     // Spawn a new thread handling the root directory of the tree
     rayon::spawn(move || {
         let span = debug_span!("root thread");
         let _enter = span.enter();
         let _ = handle_directory(args.path.clone(), sender)
-            .map_err(|e| warn!("{}",e));
+            .map_err(|e| debug!("{}",e));
     });
     debug!("Spawned root thread.");
+    let mut count = 0;
+    let mut size = 0;
     while let Ok(msg) = receiver.recv() {
-        wtr.serialize(msg)?;
+        size += msg.size;
+        count += 1;
+        let _err = wtr.serialize(msg).map_err(|e| error!("{}",e));
     }
     wtr.flush()?;
     let end: DateTime<Utc> = Utc::now();
     let diff: chrono::Duration = end - start;
-    println!("Finished in {} hours, {} minutes, and {} seconds.", diff.num_hours(), diff.num_minutes(), diff.num_seconds());
-    info!("Flushed write buffer.");
+    info!("Reported on {} files totalling {} bytes in {} hours, {} minutes, {} seconds, and {} milliseconds.",  count, size, diff.num_hours(), diff.num_minutes(), diff.num_seconds(), diff.num_milliseconds());
+    debug!("Flushed write buffer.");
     Ok(())
 }

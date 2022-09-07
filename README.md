@@ -15,7 +15,7 @@ or clone this repository and run
 
 ## Usage
 Set the log level using the RUST_LOG environment variable, either by exporting it or by prepending it to the command.
-RUST_LOG=OFF is recommended for maximum performance, or RUST_LOG=info for the most informative output.
+RUST_LOG=OFF or RUST_LOG=INFO are recommended for maximum performance, or RUST_LOG=debug for a more informative output.
 
 ```
 USAGE:
@@ -28,4 +28,4 @@ OPTIONS:
 ```
 
 ### Example
-`RUST_LOG=OFF nextree -p /home -o ~/Documents/nextree_out.csv`
+`RUST_LOG=INFO nextree -p /home -o ~/Documents/nextree_out.csv`
