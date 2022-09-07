@@ -124,7 +124,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     wtr.flush()?;
     let end: DateTime<Utc> = Utc::now();
-    let diff: chrono::Duration = end - start;
+    let mut diff: chrono::Duration = end - start;
     let (h,m,s,ms) = {
         let h = diff.num_hours();
         diff = diff - Duration::hours(h);
