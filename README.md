@@ -6,6 +6,13 @@
 
 Nextree is a multithreaded (leveraging parallel iterators and threadpool from the [rayon](https://github.com/rayon-rs/rayon) crate) command-line utility similar in function to tree, with logging and CSV output
 
+## Installation
+`cargo install nextree`
+
+or clone this repository and run
+
+`cargo build --release && cp target/release/nextree <desired location e.g. /usr/local/bin>`
+
 ## Usage
 Set the log level using the RUST_LOG environment variable, either by exporting it or by prepending it to the command.
 RUST_LOG=OFF is recommended for maximum performance, or RUST_LOG=info for the most informative output.
