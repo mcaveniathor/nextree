@@ -109,7 +109,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     rayon::spawn(move || { let _ = handle_directory(args.path, sender).map_err(|e| error!("{}",e)); });
     debug!("Spawned root thread.");
     while let Ok(msg) = receiver.recv() {
-        debug!("Message received by main thread.");
         wtr.serialize(msg)?;
     }
     wtr.flush()?;
