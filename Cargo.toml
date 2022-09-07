@@ -1,0 +1,16 @@
+[package]
+name = "nextree"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = { version = "0.4.22", features = ["serde"] }
+clap = { version = "3.2.20", features = ["derive"] }
+csv = "1.1.6"
+rayon = "1.5.3"
+serde = { version = "1.0.144", features = ["derive"] }
+tracing = "0.1.36"
+tracing-subscriber = "0.3.15"
+
